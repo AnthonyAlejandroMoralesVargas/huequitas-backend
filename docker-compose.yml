@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: huequitas_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - huequitas_network
+
+  gateway:
+    build: ./gateway
+    container_name: huequitas_gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - core-service
+      - chat-service
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - CORE_SERVICE_URL=http://core-service:3002
+      - CHAT_SERVICE_URL=http://chat-service:3003
+    networks:
+      - huequitas_network
+
+  auth-service:
+    build: ./auth-service
+    container_name: huequitas_auth
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/huequitas_auth_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    networks:
+      - huequitas_network
+
+  core-service:
+    build: ./core-service
+    container_name: huequitas_core
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mongo
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb://mongo:27017/huequitas_core_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    networks:
+      - huequitas_network
+
+  chat-service:
+    build: ./chat-service
+    container_name: huequitas_chat
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mongo
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb://mongo:27017/huequitas_chat_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    networks:
+      - huequitas_network
+
+volumes:
+  mongo_data:
+
+
+networks:
+  huequitas_network:
+    driver: bridge

@@ -1,0 +1,46 @@
+# --- Dependencias (Lo más importante) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Variables de Entorno y Secretos (SEGURIDAD) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+# Excepción: Sí queremos subir el ejemplo para que otros sepan qué variables crear
+!.env.example
+
+# --- Archivos de Sistema Operativo ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- IDEs y Editores (Configuraciones locales) ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# --- Build y Compilación (Si usaras TypeScript compilado) ---
+dist/
+build/
+coverage/
+
+# --- Docker ---
+# Si mapeaste volúmenes de datos dentro del proyecto (ej. base de datos local)
+mongo-data/
+postgres-data/
+docker-data/
+
+# --- Logs del servidor ---
+logs/
+*.log
+pid
+*.pid
