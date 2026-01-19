@@ -24,8 +24,8 @@ mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('✅ Core Service: Connected to MongoDB'))
-.catch(err => console.error('❌ Core Service: MongoDB connection error:', err));
+  .then(() => console.log('✅ Core Service: Connected to MongoDB'))
+  .catch(err => console.error('❌ Core Service: MongoDB connection error:', err));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -226,6 +226,48 @@ app.get('/likes/:restaurantId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Get like status error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/seed', async (req, res) => {
+  try {
+    await Restaurant.deleteMany({});
+
+    const huecas = [
+      {
+        name: "Los Motes de San Juan",
+        description: "El mote con chicharrón más clásico y crujiente de Quito.",
+        address: "San Juan, Quito",
+        cuisine: "Típica", // Coincide con el filtro del Front
+        image: "https://images.pexels.com/photos/2059151/pexels-photo-2059151.jpeg?auto=compress&cs=tinysrgb&w=600"
+      },
+      {
+        name: "Las Tripas de la Vicentina",
+        description: "Tripa mishqui al carbón, con papas y salsa de maní.",
+        address: "La Vicentina",
+        cuisine: "Callejera", // Coincide con el filtro del Front
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Tripa_Mishqui.jpg/800px-Tripa_Mishqui.jpg"
+      },
+      {
+        name: "Ceviches de la Rumiñahui",
+        description: "Ceviche de camarón, concha y mixto con harto limón.",
+        address: "Av. Rumiñahui",
+        cuisine: "Mariscos", // Coincide con el filtro del Front
+        image: "https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg?auto=compress&cs=tinysrgb&w=600"
+      },
+      {
+        name: "Helados de Paila de Pomasqui",
+        description: "Helados tradicionales hechos a mano en paila de bronce.",
+        address: "Pomasqui Central",
+        cuisine: "Postres", // Coincide con el filtro del Front
+        image: "https://images.pexels.com/photos/5060281/pexels-photo-5060281.jpeg?auto=compress&cs=tinysrgb&w=600"
+      }
+    ];
+
+    const created = await Restaurant.insertMany(huecas);
+    res.json({ message: '¡Huecas sembradas con imágenes!', count: created.length });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
