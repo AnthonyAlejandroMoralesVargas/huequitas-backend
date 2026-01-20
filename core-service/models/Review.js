@@ -10,6 +10,10 @@ const reviewSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  userName: {
+    type: String,
+    default: 'Anonymous'
+  },
   rating: {
     type: Number,
     required: true,

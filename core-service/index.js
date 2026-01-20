@@ -126,6 +126,7 @@ app.post('/reviews', authenticateToken, async (req, res) => {
   try {
     const { restaurantId, rating, comment } = req.body;
     const userId = req.user.userId;
+    const userName = req.user.name;
 
     if (!restaurantId || !rating) {
       return res.status(400).json({ error: 'Restaurant ID and rating are required' });
@@ -141,6 +142,7 @@ app.post('/reviews', authenticateToken, async (req, res) => {
     const review = new Review({
       restaurantId,
       userId,
+      userName,
       rating,
       comment
     });

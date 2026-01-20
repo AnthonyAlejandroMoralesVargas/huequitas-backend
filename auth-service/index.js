@@ -53,7 +53,7 @@ app.post('/register', async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, name: user.name },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -96,7 +96,7 @@ app.post('/login', async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, name: user.name },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
