@@ -124,7 +124,7 @@ app.delete('/restaurants/:id', authenticateToken, async (req, res) => {
 // POST /reviews - Create review (requires auth)
 app.post('/reviews', authenticateToken, async (req, res) => {
   try {
-    const { restaurantId, rating, comment } = req.body;
+    const { restaurantId, rating, comment, image } = req.body;
     const userId = req.user.userId;
     const userName = req.user.name;
 
@@ -144,7 +144,8 @@ app.post('/reviews', authenticateToken, async (req, res) => {
       userId,
       userName,
       rating,
-      comment
+      comment,
+      image
     });
 
     await review.save();
