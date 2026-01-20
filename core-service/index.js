@@ -164,6 +164,89 @@ app.post('/reviews', authenticateToken, async (req, res) => {
   }
 });
 
+// PUT /reviews/:reviewId - Edit review (requires auth)
+app.put('/reviews/:reviewId', authenticateToken, async (req, res) => {
+  try {
+    const { rating, comment, image } = req.body;
+    const userId = req.user.userId;
+
+    if (!rating) {
+      return res.status(400).json({ error: 'Rating is required' });
+    }
+
+    const review = await Review.findById(req.params.reviewId);
+    
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    // Verificar que solo el dueño pueda editar
+    if (review.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized to edit this review' });
+    }
+
+    // Actualizar review
+    review.rating = rating;
+    review.comment = comment || review.comment;
+    review.image = image !== undefined ? image : review.image;
+    review.updatedAt = Date.now();
+    await review.save();
+
+    // Recalcular rating del restaurante
+    const reviews = await Review.find({ restaurantId: review.restaurantId });
+    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    const restaurant = await Restaurant.findById(review.restaurantId);
+    restaurant.rating = parseFloat(avgRating.toFixed(2));
+    await restaurant.save();
+
+    res.json(review);
+  } catch (error) {
+    console.error('Update review error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /reviews/:reviewId - Delete review (requires auth)
+app.delete('/reviews/:reviewId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const review = await Review.findById(req.params.reviewId);
+
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    // Verificar que solo el dueño pueda eliminar
+    if (review.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized to delete this review' });
+    }
+
+    const restaurantId = review.restaurantId;
+    await Review.findByIdAndDelete(req.params.reviewId);
+
+    // Recalcular rating del restaurante
+    const reviews = await Review.find({ restaurantId });
+    if (reviews.length > 0) {
+      const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      const restaurant = await Restaurant.findById(restaurantId);
+      restaurant.rating = parseFloat(avgRating.toFixed(2));
+      restaurant.totalRatings = reviews.length;
+      await restaurant.save();
+    } else {
+      // Si no hay más reviews, resetear el rating
+      const restaurant = await Restaurant.findById(restaurantId);
+      restaurant.rating = 0;
+      restaurant.totalRatings = 0;
+      await restaurant.save();
+    }
+
+    res.json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    console.error('Delete review error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /reviews/:restaurantId - Get reviews for a restaurant
 app.get('/reviews/:restaurantId', async (req, res) => {
   try {

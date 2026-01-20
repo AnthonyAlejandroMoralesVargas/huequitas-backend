@@ -28,6 +28,10 @@ const reviewSchema = new mongoose.Schema({
     type: String,  
     default: null
   },
+  updatedAt: {
+  type: Date,
+  default: Date.now
+},
   createdAt: {
     type: Date,
     default: Date.now
