@@ -2,6 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const { 
+  validateRating,
+  validateReviewComment,
+  validateImageFile,
+  validateMongoId,
+  validateRequired
+} = require('./utils/validators');
 
 const Restaurant = require('./models/Restaurant');
 const Review = require('./models/Review');
@@ -128,8 +135,28 @@ app.post('/reviews', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const userName = req.user.name;
 
-    if (!restaurantId || !rating) {
-      return res.status(400).json({ error: 'Restaurant ID and rating are required' });
+      // Validar restaurantId
+    let validation = validateMongoId(restaurantId);
+    if (!validation.valid) {
+      return res.status(400).json({ error: 'ID de restaurante inválido' });
+    }
+
+    // Validar rating
+    validation = validateRating(rating);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+
+    // Validar comentario
+    validation = validateReviewComment(comment);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+
+    // Validar imagen
+    validation = validateImageFile(image);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
     }
 
     // Check if restaurant exists
@@ -170,8 +197,28 @@ app.put('/reviews/:reviewId', authenticateToken, async (req, res) => {
     const { rating, comment, image } = req.body;
     const userId = req.user.userId;
 
-    if (!rating) {
-      return res.status(400).json({ error: 'Rating is required' });
+    // Validar ID de review
+    let validation = validateMongoId(req.params.reviewId);
+    if (!validation.valid) {
+      return res.status(400).json({ error: 'ID de reseña inválido' });
+    }
+
+    // Validar rating
+    validation = validateRating(rating);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+
+    // Validar comentario
+    validation = validateReviewComment(comment);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+
+    // Validar imagen
+    validation = validateImageFile(image);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
     }
 
     const review = await Review.findById(req.params.reviewId);
@@ -210,6 +257,13 @@ app.put('/reviews/:reviewId', authenticateToken, async (req, res) => {
 app.delete('/reviews/:reviewId', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
+
+    // Validar ID de review
+    const validation = validateMongoId(req.params.reviewId);
+    if (!validation.valid) {
+      return res.status(400).json({ error: 'ID de reseña inválido' });
+    }
+
     const review = await Review.findById(req.params.reviewId);
 
     if (!review) {

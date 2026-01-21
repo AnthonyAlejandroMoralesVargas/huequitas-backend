@@ -4,6 +4,12 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 require('dotenv').config();
+const { 
+  validateEmail, 
+  validateName, 
+  validatePasswordStrength,
+  validateRequired 
+} = require('./utils/validators');
 
 const User = require('./models/User');
 
@@ -35,10 +41,36 @@ app.get('/health', (req, res) => {
 // Register endpoint
 app.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, confirmPassword } = req.body;
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'Email, password, and name are required' });
+      // Validar campos requeridos
+    let validation = validateRequired(email, 'Email');
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    validation = validateRequired(password, 'Contraseña');
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    validation = validateRequired(name, 'Nombre');
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    validation = validateRequired(confirmPassword, 'Confirmar contraseña');
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    // Validar email
+    validation = validateEmail(email);
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    // Validar nombre
+    validation = validateName(name);
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    // Validar contraseña fuerte
+    validation = validatePasswordStrength(password);
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    // Validar que las contraseñas coincidan
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Las contraseñas no coinciden' });
     }
 
     // Check if user already exists
@@ -78,9 +110,16 @@ app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+   // Validar campos requeridos
+    let validation = validateRequired(email, 'Email');
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    validation = validateRequired(password, 'Contraseña');
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
+
+    // Validar email
+    validation = validateEmail(email);
+    if (!validation.valid) return res.status(400).json({ error: validation.message });
 
     // Find user
     const user = await User.findOne({ email });
