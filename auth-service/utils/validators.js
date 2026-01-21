@@ -31,46 +31,43 @@ const validatePasswordStrength = (password) => {
   if (!password) {
     return { valid: false, message: 'La contraseña es requerida' };
   }
-  if (password.length < 6) {
-    return { valid: false, message: 'La contraseña debe tener mínimo 6 caracteres' };
-  }
   
-  let score = 1; // Base: longitud mínima
   const issues = [];
   
-  // Verificar minúsculas
-  if (/[a-z]/.test(password)) {
-    score++;
-  } else {
-    issues.push('minúsculas');
+  // Verificar longitud mínima de 8 caracteres
+  if (password.length < 8) {
+    issues.push('al menos 8 caracteres');
   }
   
-  // Verificar mayúsculas
-  if (/[A-Z]/.test(password)) {
-    score++;
-  } else {
-    issues.push('mayúsculas');
+  // Verificar minúsculas (a-z)
+  if (!/[a-z]/.test(password)) {
+    issues.push('letras minúsculas (a-z)');
   }
   
-  // Verificar números
-  if (/[0-9]/.test(password)) {
-    score++;
-  } else {
-    issues.push('números');
+  // Verificar mayúsculas (A-Z)
+  if (!/[A-Z]/.test(password)) {
+    issues.push('letras mayúsculas (A-Z)');
   }
   
-  // Score mínimo requerido: 3 (longitud + 2 de los 3 criterios)
-  // Ejemplo: minúsculas + mayúsculas = 3 ✅
-  // Ejemplo: solo números = 2 ❌
-  if (score < 3) {
+  // Verificar números (0-9)
+  if (!/[0-9]/.test(password)) {
+    issues.push('números (0-9)');
+  }
+  
+  // Verificar símbolos especiales (!@#$%^&*...)
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    issues.push('símbolos especiales (!@#$%^&*...)');
+  }
+  
+  // Si hay algún requisito no cumplido, retornar error
+  if (issues.length > 0) {
     return { 
       valid: false, 
-      score, 
-      message: `La contraseña es muy débil. Añade: ${issues.join(', ')}` 
+      message: `La contraseña debe incluir: ${issues.join(', ')}` 
     };
   }
   
-  return { valid: true, score };
+  return { valid: true };
 };
 
 // Required field validation
