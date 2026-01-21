@@ -24,7 +24,8 @@ app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI, {
