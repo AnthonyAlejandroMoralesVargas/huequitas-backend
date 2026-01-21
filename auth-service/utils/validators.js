@@ -78,11 +78,25 @@ const validateRequired = (value, fieldName) => {
   return { valid: true };
 };
 
+// Confirm password validation
+const validateConfirmPassword = (password, confirmPassword) => {
+  if (!confirmPassword) {
+    return { valid: false, message: 'La confirmación de contraseña es requerida' };
+  }
+  
+  if (password !== confirmPassword) {
+    return { valid: false, message: 'Las contraseñas no coinciden' };
+  }
+  
+  return { valid: true };
+};
+
 module.exports = {
   validateEmail,
   validateName,
   validatePasswordStrength,
   validateRequired,
+  validateConfirmPassword,
   MAX_COMMENT_LENGTH,
   MAX_IMAGE_SIZE_BYTES,
   ALLOWED_IMAGE_FORMATS

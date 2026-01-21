@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  resetCode: {
+    type: String,
+    default: null
+  },
   resetTokenExpiry: {
     type: Date,
     default: null
