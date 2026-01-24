@@ -384,148 +384,114 @@ app.get('/likes/:restaurantId', authenticateToken, async (req, res) => {
   }
 });
 
+// --- GENERADOR MASIVO DE 80 HUECAS (SMART SEEDER) ---
 app.post('/seed', async (req, res) => {
   try {
+    // 1. Limpiamos la base de datos previa
     await Restaurant.deleteMany({});
 
-    const huecas = [
-      {
-        name: "Los Motes de San Juan",
-        description: "El mote con chicharrón más clásico y crujiente de Quito. Tradición desde 1985.",
-        address: "Calle Carchi y Bolivia, San Juan",
-        cuisine: "Típica",
-        image: "https://images.pexels.com/photos/2059151/pexels-photo-2059151.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Centro",
-          coordinates: { lat: -0.2105, lng: -78.5108 }
-        }
-      },
-      {
-        name: "Las Tripas de la Vicentina",
-        description: "Tripa mishqui al carbón, con papas y salsa de maní. La mejor de Quito.",
-        address: "La Vicentina, cerca del estadio",
-        cuisine: "Callejera",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Tripa_Mishqui.jpg/800px-Tripa_Mishqui.jpg",
-        location: {
-          sector: "Centro",
-          coordinates: { lat: -0.2012, lng: -78.4892 }
-        }
-      },
-      {
-        name: "Ceviches de la Rumiñahui",
-        description: "Ceviche de camarón, concha y mixto con harto limón. Frescos del día.",
-        address: "Av. Rumiñahui, Valle de los Chillos",
-        cuisine: "Mariscos",
-        image: "https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Valles",
-          coordinates: { lat: -0.2985, lng: -78.4562 }
-        }
-      },
-      {
-        name: "Helados de Paila de Pomasqui",
-        description: "Helados tradicionales hechos a mano en paila de bronce. Sabores únicos.",
-        address: "Parque Central de Pomasqui",
-        cuisine: "Postres",
-        image: "https://images.pexels.com/photos/5060281/pexels-photo-5060281.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Norte",
-          coordinates: { lat: -0.0832, lng: -78.4583 }
-        }
-      },
-      {
-        name: "Hornado de la Colmena",
-        description: "El hornado más jugoso del sur de Quito. Incluye mote, llapingacho y ensalada.",
-        address: "Mercado La Colmena, Chillogallo",
-        cuisine: "Típica",
-        image: "https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Sur",
-          coordinates: { lat: -0.2698, lng: -78.5412 }
-        }
-      },
-      {
-        name: "Empanadas de Morocho del Centro",
-        description: "Empanadas de morocho rellenas de carne. Receta de la abuela desde 1960.",
-        address: "Calle Venezuela, Centro Histórico",
-        cuisine: "Callejera",
-        image: "https://images.pexels.com/photos/6646069/pexels-photo-6646069.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Centro",
-          coordinates: { lat: -0.2201, lng: -78.5123 }
-        }
-      },
-      {
-        name: "El Rincón Manabita",
-        description: "Ceviches, encebollados y corviches auténticos de la costa ecuatoriana.",
-        address: "Av. Amazonas y Naciones Unidas",
-        cuisine: "Mariscos",
-        image: "https://images.pexels.com/photos/8697540/pexels-photo-8697540.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Norte",
-          coordinates: { lat: -0.1695, lng: -78.4833 }
-        }
-      },
-      {
-        name: "Fritada de Sangolquí",
-        description: "Fritada tradicional con mote, tostado, maduro frito y encurtido. Porción generosa.",
-        address: "Plaza Central de Sangolquí",
-        cuisine: "Típica",
-        image: "https://images.pexels.com/photos/7613568/pexels-photo-7613568.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Valles",
-          coordinates: { lat: -0.3314, lng: -78.4508 }
-        }
-      },
-      {
-        name: "Panadería y Café La Palma",
-        description: "Quesadillas quiteñas, pristiños y humitas. Dulces tradicionales desde 1940.",
-        address: "Av. La Prensa, La Y",
-        cuisine: "Postres",
-        image: "https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Norte",
-          coordinates: { lat: -0.1234, lng: -78.4892 }
-        }
-      },
-      {
-        name: "Menestras del Negro",
-        description: "Menestras con arroz, carne asada y patacones. Sabor guayaco en Quito.",
-        address: "La Mariscal, Reina Victoria",
-        cuisine: "Típica",
-        image: "https://images.pexels.com/photos/5737254/pexels-photo-5737254.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Centro",
-          coordinates: { lat: -0.2089, lng: -78.4927 }
-        }
-      },
-      {
-        name: "Choclos con Queso de Quitumbe",
-        description: "Choclos tiernos con queso fresco de hoja. El mejor snack del sur.",
-        address: "Terminal Quitumbe",
-        cuisine: "Callejera",
-        image: "https://images.pexels.com/photos/4955253/pexels-photo-4955253.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Sur",
-          coordinates: { lat: -0.2985, lng: -78.5547 }
-        }
-      },
-      {
-        name: "Tres Leches de Cumbayá",
-        description: "Pastel de tres leches artesanal. El postre favorito del valle.",
-        address: "Calle Francisco de Orellana, Cumbayá",
-        cuisine: "Postres",
-        image: "https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=600",
-        location: {
-          sector: "Valles",
-          coordinates: { lat: -0.2012, lng: -78.4354 }
+    // 2. Datos de configuración
+    const sectors = ['Norte', 'Centro', 'Sur', 'Valles'];
+    const cuisines = ['Típica', 'Callejera', 'Mariscos', 'Postres'];
+
+    // Coordenadas base aproximadas de cada sector en Quito
+    const baseCoords = {
+      'Norte': { lat: -0.1600, lng: -78.4800 },   // La Carolina / Iñaquito
+      'Centro': { lat: -0.2200, lng: -78.5100 },  // Centro Histórico
+      'Sur': { lat: -0.2800, lng: -78.5400 },     // Quitumbe / Chillogallo
+      'Valles': { lat: -0.2000, lng: -78.4300 }   // Cumbayá
+    };
+
+    // Diccionario para generar nombres realistas
+    const dataDict = {
+      names: ["Luchito", "La Vecina", "Don Pepe", "Doña Mary", "El Paisa", "Rosita", "Jorgito", "Mama Miche", "El Gato", "Bolívar"],
+      prefixes: ["El Rincón de", "Las Delicias de", "Antojitos", "La Hueca de", "Sabores de", "Don", "Doña", "El Palacio de"],
+      
+      // Platos específicos por categoría para el nombre
+      'Típica': ["Hornado", "Fritada", "Mote", "Yahuarlocro", "Seco de Chivo"],
+      'Callejera': ["Tripas", "Empanadas", "Choclos", "Salchipapas", "Pinchos"],
+      'Mariscos': ["Ceviche", "Encebollado", "Corviche", "Cangrejada", "Viche"],
+      'Postres': ["Helados", "Espumilla", "Higos", "Quesadillas", "Pristiños"]
+    };
+
+    // Imágenes rotativas para que no se vea monótono
+    const images = {
+      'Típica': [
+        "https://images.pexels.com/photos/2059151/pexels-photo-2059151.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/7613568/pexels-photo-7613568.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg?auto=compress&cs=tinysrgb&w=600"
+      ],
+      'Callejera': [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Tripa_Mishqui.jpg/800px-Tripa_Mishqui.jpg",
+        "https://images.pexels.com/photos/6646069/pexels-photo-6646069.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/4955253/pexels-photo-4955253.jpeg?auto=compress&cs=tinysrgb&w=600"
+      ],
+      'Mariscos': [
+        "https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/8697540/pexels-photo-8697540.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/1683545/pexels-photo-1683545.jpeg?auto=compress&cs=tinysrgb&w=600"
+      ],
+      'Postres': [
+        "https://images.pexels.com/photos/5060281/pexels-photo-5060281.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&cs=tinysrgb&w=600"
+      ]
+    };
+
+    const generatedHuecas = [];
+
+    // 3. EL ALGORITMO GENERADOR (Triple Bucle)
+    for (const sector of sectors) {
+      for (const cuisine of cuisines) {
+        // Generar 5 restaurantes para esta combinación Sector + Cocina
+        for (let i = 0; i < 5; i++) {
+          
+          // Seleccionar elementos aleatorios
+          const prefix = dataDict.prefixes[Math.floor(Math.random() * dataDict.prefixes.length)];
+          const name = dataDict.names[Math.floor(Math.random() * dataDict.names.length)];
+          const dish = dataDict[cuisine][i % 5]; // Usar platos variados cíclicamente
+          const imgUrl = images[cuisine][Math.floor(Math.random() * images[cuisine].length)];
+
+          // Generar coordenadas con variación (jitter) para que no se solapen en un mapa
+          const latJitter = (Math.random() * 0.02) - 0.01; // +/- 1km aprox
+          const lngJitter = (Math.random() * 0.02) - 0.01;
+
+          const hueca = {
+            name: `${prefix} ${name} - ${dish}`,
+            description: `Disfruta del mejor ${dish} en el sector ${sector}. Sabor auténtico quiteño garantizado.`,
+            address: `Calle Principal N${Math.floor(Math.random()*100)} y Transversal, ${sector}`,
+            cuisine: cuisine,
+            image: imgUrl,
+            location: {
+              sector: sector,
+              coordinates: {
+                lat: baseCoords[sector].lat + latJitter,
+                lng: baseCoords[sector].lng + lngJitter
+              }
+            },
+            // Rating aleatorio entre 3.5 y 5.0
+            rating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
+            totalRatings: Math.floor(Math.random() * 150) + 10,
+            createdAt: new Date()
+          };
+
+          generatedHuecas.push(hueca);
         }
       }
-    ];
+    }
 
-    const created = await Restaurant.insertMany(huecas);
-    res.json({ message: '¡Huecas sembradas con ubicaciones de Quito!', count: created.length });
+    // 4. Insertar en MongoDB
+    const created = await Restaurant.insertMany(generatedHuecas);
+    
+    console.log(`🌱 Seed completado: ${created.length} huecas creadas.`);
+    res.json({ 
+      message: '¡Base de datos poblada exitosamente!', 
+      total: created.length,
+      detail: '80 restaurantes distribuidos equitativamente por sector y categoría.'
+    });
+
   } catch (error) {
+    console.error('Error seeding:', error);
     res.status(500).json({ error: error.message });
   }
 });
