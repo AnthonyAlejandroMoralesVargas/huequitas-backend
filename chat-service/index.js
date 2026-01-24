@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -22,7 +22,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/huequi
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
   credentials: true
 }));
 app.use(express.json());

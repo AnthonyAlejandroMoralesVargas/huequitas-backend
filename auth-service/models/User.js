@@ -19,6 +19,20 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  preferences: {
+    foodTypes: {
+      type: [String],
+      default: []
+    },
+    location: {
+      type: String,
+      default: null
+    }
+  },
+  isProfileComplete: {
+    type: Boolean,
+    default: false
+  },
   resetToken: {
     type: String,
     default: null

@@ -25,7 +25,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-i
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
   credentials: true
 }));
 app.use(express.json());
@@ -100,7 +100,9 @@ app.post('/register', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        preferences: user.preferences,
+        isProfileComplete: user.isProfileComplete
       }
     });
   } catch (error) {
@@ -150,7 +152,9 @@ app.post('/login', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        preferences: user.preferences,
+        isProfileComplete: user.isProfileComplete
       }
     });
   } catch (error) {
@@ -311,21 +315,207 @@ app.post('/password-reset', async (req, res) => {
 app.get('/verify', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    res.json({ valid: true, user: { id: user._id, email: user.email, name: user.name } });
+    res.json({
+      valid: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        preferences: user.preferences,
+        isProfileComplete: user.isProfileComplete
+      }
+    });
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// Middleware para autenticación
+const authenticateToken = (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// GET /profile - Obtener perfil del usuario
+app.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password -resetToken -resetCode -resetTokenExpiry');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      preferences: user.preferences,
+      isProfileComplete: user.isProfileComplete,
+      createdAt: user.createdAt
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /profile - Actualizar perfil del usuario
+app.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { name, preferences } = req.body;
+    const updateData = {};
+
+    // Validar nombre si se proporciona
+    if (name !== undefined) {
+      const validation = validateName(name);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.message });
+      }
+      updateData.name = name;
+    }
+
+    // Validar preferencias si se proporcionan
+    if (preferences !== undefined) {
+      const validFoodTypes = ['Típica', 'Callejera', 'Mariscos', 'Postres'];
+      const validLocations = ['Norte', 'Centro', 'Sur', 'Valles'];
+
+      if (preferences.foodTypes) {
+        const invalidTypes = preferences.foodTypes.filter(t => !validFoodTypes.includes(t));
+        if (invalidTypes.length > 0) {
+          return res.status(400).json({ error: `Tipos de comida inválidos: ${invalidTypes.join(', ')}` });
+        }
+        updateData['preferences.foodTypes'] = preferences.foodTypes;
+      }
+
+      if (preferences.location) {
+        if (!validLocations.includes(preferences.location)) {
+          return res.status(400).json({ error: `Ubicación inválida. Opciones: ${validLocations.join(', ')}` });
+        }
+        updateData['preferences.location'] = preferences.location;
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password -resetToken -resetCode -resetTokenExpiry');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generar nuevo token con datos actualizados
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Profile updated successfully',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        preferences: user.preferences,
+        isProfileComplete: user.isProfileComplete
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /profile/complete-setup - Completar configuración inicial
+app.post('/profile/complete-setup', authenticateToken, async (req, res) => {
+  try {
+    const { foodTypes, location } = req.body;
+
+    // Validar que se proporcionen ambos campos
+    if (!foodTypes || !Array.isArray(foodTypes) || foodTypes.length === 0) {
+      return res.status(400).json({ error: 'Debes seleccionar al menos un tipo de comida' });
+    }
+
+    if (!location) {
+      return res.status(400).json({ error: 'Debes seleccionar tu ubicación' });
+    }
+
+    // Validar tipos de comida
+    const validFoodTypes = ['Típica', 'Callejera', 'Mariscos', 'Postres'];
+    const invalidTypes = foodTypes.filter(t => !validFoodTypes.includes(t));
+    if (invalidTypes.length > 0) {
+      return res.status(400).json({ error: `Tipos de comida inválidos: ${invalidTypes.join(', ')}` });
+    }
+
+    // Validar ubicación
+    const validLocations = ['Norte', 'Centro', 'Sur', 'Valles'];
+    if (!validLocations.includes(location)) {
+      return res.status(400).json({ error: `Ubicación inválida. Opciones: ${validLocations.join(', ')}` });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      {
+        $set: {
+          'preferences.foodTypes': foodTypes,
+          'preferences.location': location,
+          isProfileComplete: true
+        }
+      },
+      { new: true, runValidators: true }
+    ).select('-password -resetToken -resetCode -resetTokenExpiry');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generar nuevo token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Setup completed successfully',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        preferences: user.preferences,
+        isProfileComplete: user.isProfileComplete
+      }
+    });
+  } catch (error) {
+    console.error('Complete setup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

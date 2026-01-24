@@ -20,7 +20,18 @@ const restaurantSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: false 
+    required: false
+  },
+  location: {
+    sector: {
+      type: String,
+      enum: ['Norte', 'Centro', 'Sur', 'Valles'],
+      trim: true
+    },
+    coordinates: {
+      lat: Number,
+      lng: Number
+    }
   },
   rating: {
     type: Number,
