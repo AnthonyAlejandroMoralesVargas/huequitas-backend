@@ -384,110 +384,188 @@ app.get('/likes/:restaurantId', authenticateToken, async (req, res) => {
   }
 });
 
-// --- GENERADOR MASIVO DE 80 HUECAS (SMART SEEDER) ---
+// --- GENERADOR DE 80 HUECAS ---
 app.post('/seed', async (req, res) => {
   try {
-    // 1. Limpiamos la base de datos previa
+    // 1. Limpiar BD
     await Restaurant.deleteMany({});
 
-    // 2. Datos de configuración
-    const sectors = ['Norte', 'Centro', 'Sur', 'Valles'];
-    const cuisines = ['Típica', 'Callejera', 'Mariscos', 'Postres'];
-
-    // Coordenadas base aproximadas de cada sector en Quito
+    // 2. Coordenadas Base para los sectores
     const baseCoords = {
-      'Norte': { lat: -0.1600, lng: -78.4800 },   // La Carolina / Iñaquito
-      'Centro': { lat: -0.2200, lng: -78.5100 },  // Centro Histórico
-      'Sur': { lat: -0.2800, lng: -78.5400 },     // Quitumbe / Chillogallo
-      'Valles': { lat: -0.2000, lng: -78.4300 }   // Cumbayá
+      'Norte': { lat: -0.1600, lng: -78.4800 },
+      'Centro': { lat: -0.2200, lng: -78.5100 },
+      'Sur': { lat: -0.2800, lng: -78.5400 },
+      'Valles': { lat: -0.2000, lng: -78.4300 }
     };
 
-    // Diccionario para generar nombres realistas
-    const dataDict = {
-      names: ["Luchito", "La Vecina", "Don Pepe", "Doña Mary", "El Paisa", "Rosita", "Jorgito", "Mama Miche", "El Gato", "Bolívar"],
-      prefixes: ["El Rincón de", "Las Delicias de", "Antojitos", "La Hueca de", "Sabores de", "Don", "Doña", "El Palacio de"],
-      
-      // Platos específicos por categoría para el nombre
-      'Típica': ["Hornado", "Fritada", "Mote", "Yahuarlocro", "Seco de Chivo"],
-      'Callejera': ["Tripas", "Empanadas", "Choclos", "Salchipapas", "Pinchos"],
-      'Mariscos': ["Ceviche", "Encebollado", "Corviche", "Cangrejada", "Viche"],
-      'Postres': ["Helados", "Espumilla", "Higos", "Quesadillas", "Pristiños"]
+    // 3. LA GRAN LISTA DE DATOS (Estructurada por Sector > Categoría)
+    const database = {
+      'Norte': {
+        'Típica': [
+          { name: "El Rincón de Luchito - Hornado", img: "https://upload.wikimedia.org/wikipedia/commons/3/34/Ama_la_Vida_-_Flickr_-_Imbabura_Hornado_%2823%29_%2814294973591%29.jpg" },
+          { name: "Las Delicias de La Vecina - Fritada", img: "https://upload.wikimedia.org/wikipedia/commons/6/60/CUENCA_-_CIUDAD_-_GENTE_-_GASTRONOM%C3%8DA_%2818136357868%29.jpg" },
+          { name: "Antojitos Don Pepe - Mote", img: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Plato_de_jam%C3%B3n_huaracino_con_papa%2C_mote_y_ensalada_02.jpg" },
+          { name: "La Hueca de Doña Mary - Yahuarlocro", img: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Plato_de_Yahuarlocro.jpg" },
+          { name: "Sabores de El Paisa - Seco de Chivo", img: "https://upload.wikimedia.org/wikipedia/commons/2/21/Seco_de_chivo.jpg" }
+        ],
+        'Callejera': [
+          { name: "Don Rosita - Tripas", img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/200611925_1788471ce7_o_d.jpg" },
+          { name: "Doña Jorgito - Empanadas", img: "https://upload.wikimedia.org/wikipedia/commons/9/97/Empanada_-_Stu_Spivack.jpg" },
+          { name: "El Palacio de Mama Miche - Choclos", img: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Queso_humacha_La_Paz.jpg" },
+          { name: "La Casa de El Gato - Salchipapas", img: "https://upload.wikimedia.org/wikipedia/commons/3/32/Lima_salchipapas_%28cropped%29.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pinchos", img: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Brochette_d%27espadon_%C3%A0_Georgio%C3%BApoli_%28Cr%C3%A8te%29_en_juillet_2021.jpg" }
+        ],
+        'Mariscos': [
+          { name: "El Rincón de Luchito - Ceviche", img: "https://upload.wikimedia.org/wikipedia/commons/0/0e/CEVICHE_DE_CAMAR%C3%93N_ECUATORIANO.jpg" },
+          { name: "Las Delicias de La Vecina - Encebollado", img: "https://upload.wikimedia.org/wikipedia/commons/2/2d/Semifinal_del_Campeonato_del_Encebollado_en_Esmeraldas_2015_%2818062294436%29.jpg" },
+          { name: "Antojitos Don Pepe - Corviche", img: "https://upload.wikimedia.org/wikipedia/commons/7/74/Corviche_de_pescado_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" },
+          { name: "La Hueca de Doña Mary - Cangrejada", img: "https://upload.wikimedia.org/wikipedia/commons/6/64/Cangrejada.jpg" },
+          { name: "Sabores de El Paisa - Viche", img: "https://upload.wikimedia.org/wikipedia/commons/7/75/Viche_de_pescado_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ],
+        'Postres': [
+          { name: "Don Rosita - Helados", img: "https://upload.wikimedia.org/wikipedia/commons/0/0f/HELADOS_DE_PAILA_%2840475435140%29.jpg" },
+          { name: "Doña Jorgito - Espumilla", img: "https://upload.wikimedia.org/wikipedia/commons/8/80/Espumilla.jpg" },
+          { name: "El Palacio de Mama Miche - Higos", img: "https://upload.wikimedia.org/wikipedia/commons/6/62/Higos_con_queso.jpg" },
+          { name: "La Casa de El Gato - Quesadillas", img: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Dulces_t%C3%ADpicos_de_Gualaceo.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pristiños", img: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Pristi%C3%B1os_acompa%C3%B1ados_con_higos_con_queso_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ]
+      },
+      'Centro': {
+        'Típica': [
+          { name: "El Rincón de Luchito - Hornado", img: "https://upload.wikimedia.org/wikipedia/commons/1/18/Ama_la_Vida_-_Flickr_-_Cotopaxi_Hornado_%2818%29_%2814297773574%29.jpg" },
+          { name: "Las Delicias de La Vecina - Fritada", img: "https://upload.wikimedia.org/wikipedia/commons/b/b9/IMA-20180603_162329.jpg" },
+          { name: "Antojitos Don Pepe - Mote", img: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Mote_pata_cuencano.jpg" },
+          { name: "La Hueca de Doña Mary - Yahuarlocro", img: "https://upload.wikimedia.org/wikipedia/commons/4/49/Yahuarlocro_%28Ecuador%29.jpg" },
+          { name: "Sabores de El Paisa - Seco de Chivo", img: "https://upload.wikimedia.org/wikipedia/commons/1/14/Seco2.jpg" }
+        ],
+        'Callejera': [
+          { name: "Don Rosita - Tripas", img: "https://upload.wikimedia.org/wikipedia/commons/8/80/Tripitas_durango.jpg" },
+          { name: "Doña Jorgito - Empanadas", img: "https://upload.wikimedia.org/wikipedia/commons/4/47/Vigan_Empanada.jpg" },
+          { name: "El Palacio de Mama Miche - Choclos", img: "https://upload.wikimedia.org/wikipedia/commons/4/46/Gastronomia_costarricense.JPG" },
+          { name: "La Casa de El Gato - Salchipapas", img: "https://upload.wikimedia.org/wikipedia/commons/8/81/Salchipapa_especial.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pinchos", img: "https://upload.wikimedia.org/wikipedia/commons/b/bc/Pinchos_-_fugzu.jpg" }
+        ],
+        'Mariscos': [
+          { name: "El Rincón de Luchito - Ceviche", img: "https://upload.wikimedia.org/wikipedia/commons/2/20/Ceviche_de_pescado_%2850915656663%29.jpg" },
+          { name: "Las Delicias de La Vecina - Encebollado", img: "https://upload.wikimedia.org/wikipedia/commons/7/71/Ecuadorian_food.jpg" },
+          { name: "Antojitos Don Pepe - Corviche", img: "https://upload.wikimedia.org/wikipedia/commons/2/2c/Corviches_ecuatorianos.jpg" },
+          { name: "La Hueca de Doña Mary - Cangrejada", img: "https://upload.wikimedia.org/wikipedia/commons/6/64/Cangrejada.jpg" },
+          { name: "Sabores de El Paisa - Viche", img: "https://upload.wikimedia.org/wikipedia/commons/8/88/Viche_Chonero.jpg" }
+        ],
+        'Postres': [
+          { name: "Don Rosita - Helados", img: "https://upload.wikimedia.org/wikipedia/commons/5/58/Quito%2C_helado_de_paila%2C_street_food%2C_ice_cream.jpg" },
+          { name: "Doña Jorgito - Espumilla", img: "https://upload.wikimedia.org/wikipedia/commons/8/80/Espumilla.jpg" },
+          { name: "El Palacio de Mama Miche - Higos", img: "https://upload.wikimedia.org/wikipedia/commons/d/de/Pan_de_higos_-_Apilamiento.JPG" },
+          { name: "La Casa de El Gato - Quesadillas", img: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Dulces_t%C3%ADpicos_de_Gualaceo.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pristiños", img: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Pristi%C3%B1os_acompa%C3%B1ados_con_higos_con_queso_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ]
+      },
+      'Sur': {
+        'Típica': [
+          { name: "El Rincón de Luchito - Hornado", img: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Hornado_Pastuso.jpg" },
+          { name: "Las Delicias de La Vecina - Fritada", img: "https://upload.wikimedia.org/wikipedia/commons/5/58/Fritada_de_setas_de_cardo_y_robellones%2C_gastronom%C3%ADa_comarca_Maestrazgo.jpg" },
+          { name: "Antojitos Don Pepe - Mote", img: "https://upload.wikimedia.org/wikipedia/commons/e/ed/Mote-pillo.jpg" },
+          { name: "La Hueca de Doña Mary - Yahuarlocro", img: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Plato_de_Yahuarlocro.jpg" },
+          { name: "Sabores de El Paisa - Seco de Chivo", img: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Seco_de_chivo_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ],
+        'Callejera': [
+          { name: "Don Rosita - Tripas", img: "https://upload.wikimedia.org/wikipedia/commons/4/45/Tripas_rellenas_en_el_Mercado_Abasto.jpg" },
+          { name: "Doña Jorgito - Empanadas", img: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Empanadas_argentinas_de_carne_%28fritas%29.jpg" },
+          { name: "El Palacio de Mama Miche - Choclos", img: "https://upload.wikimedia.org/wikipedia/commons/8/82/Queso_humacha_3.jpg" },
+          { name: "La Casa de El Gato - Salchipapas", img: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Salchipapa_Coste%C3%B1o.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pinchos", img: "https://upload.wikimedia.org/wikipedia/commons/1/1d/Tapas_Barcelona.jpg" }
+        ],
+        'Mariscos': [
+          { name: "El Rincón de Luchito - Ceviche", img: "https://upload.wikimedia.org/wikipedia/commons/6/66/Ceviche_ecuador.JPG" },
+          { name: "Las Delicias de La Vecina - Encebollado", img: "https://upload.wikimedia.org/wikipedia/commons/6/66/Encebollado_mixtoo.jpg" },
+          { name: "Antojitos Don Pepe - Corviche", img: "https://upload.wikimedia.org/wikipedia/commons/7/74/Corviche_de_pescado_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" },
+          { name: "La Hueca de Doña Mary - Cangrejada", img: "https://upload.wikimedia.org/wikipedia/commons/6/64/Cangrejada.jpg" },
+          { name: "Sabores de El Paisa - Viche", img: "https://upload.wikimedia.org/wikipedia/commons/7/75/Viche_de_pescado_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ],
+        'Postres': [
+          { name: "Don Rosita - Helados", img: "https://upload.wikimedia.org/wikipedia/commons/7/71/HELADOS_DE_PAILA_%2842235453952%29.jpg" },
+          { name: "Doña Jorgito - Espumilla", img: "https://upload.wikimedia.org/wikipedia/commons/7/70/Manzanas%2C_gelatina_y_espumilla.JPG" },
+          { name: "El Palacio de Mama Miche - Higos", img: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Cohete_almeria_dulce.jpg" },
+          { name: "La Casa de El Gato - Quesadillas", img: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Dulces_t%C3%ADpicos_de_Gualaceo.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pristiños", img: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Pristi%C3%B1os_acompa%C3%B1ados_con_higos_con_queso_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ]
+      },
+      'Valles': {
+        'Típica': [
+          { name: "El Rincón de Luchito - Hornado", img: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Ama_la_Vida_-_Flickr_-_Azuay_Hornado_%283%29_%2814318538733%29.jpg" },
+          { name: "Las Delicias de La Vecina - Fritada", img: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Fritada_de_verduras_con_costilla_de_cerdo.jpg" },
+          { name: "Antojitos Don Pepe - Mote", img: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Mondongo_Chuquisaque%C3%B1o.jpg" },
+          { name: "La Hueca de Doña Mary - Yahuarlocro", img: "https://upload.wikimedia.org/wikipedia/commons/4/49/Yahuarlocro_%28Ecuador%29.jpg" },
+          { name: "Sabores de El Paisa - Seco de Chivo", img: "https://upload.wikimedia.org/wikipedia/commons/4/46/Seco_de_chivo_de_zapotal.jpg" }
+        ],
+        'Callejera': [
+          { name: "Don Rosita - Tripas", img: "https://upload.wikimedia.org/wikipedia/commons/4/45/Tripas_rellenas_en_el_Mercado_Abasto.jpg" },
+          { name: "Doña Jorgito - Empanadas", img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Empanadas_argentinas_%28docena_fritas_de_carne%29.jpg" },
+          { name: "El Palacio de Mama Miche - Choclos", img: "https://upload.wikimedia.org/wikipedia/commons/d/d6/Queso_humacha_2.jpg" },
+          { name: "La Casa de El Gato - Salchipapas", img: "https://upload.wikimedia.org/wikipedia/commons/9/9e/Salchipapas_20220704_121159.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pinchos", img: "https://upload.wikimedia.org/wikipedia/commons/b/b7/Pincho_moruna_brocheta.jpg" }
+        ],
+        'Mariscos': [
+          { name: "El Rincón de Luchito - Ceviche", img: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Ceviche_ecuatoriano_de_camar%C3%B3n.jpg" },
+          { name: "Las Delicias de La Vecina - Encebollado", img: "https://upload.wikimedia.org/wikipedia/commons/f/f3/Encebollado_Ecuatoriano.png.jpg" },
+          { name: "Antojitos Don Pepe - Corviche", img: "https://upload.wikimedia.org/wikipedia/commons/2/2c/Corviches_ecuatorianos.jpg" },
+          { name: "La Hueca de Doña Mary - Cangrejada", img: "https://upload.wikimedia.org/wikipedia/commons/6/64/Cangrejada.jpg" },
+          { name: "Sabores de El Paisa - Viche", img: "https://upload.wikimedia.org/wikipedia/commons/8/88/Viche_Chonero.jpg" }
+        ],
+        'Postres': [
+          { name: "Don Rosita - Helados", img: "https://upload.wikimedia.org/wikipedia/commons/5/54/Helado_de_paila_02.jpg" },
+          { name: "Doña Jorgito - Espumilla", img: "https://upload.wikimedia.org/wikipedia/commons/d/dc/Gelatinas%2C_manzana_y_espumilla.JPG" },
+          { name: "El Palacio de Mama Miche - Higos", img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Beautiful_decorated_cake_with_figs_and_blueberry_from_above._%2849574602871%29.jpg" },
+          { name: "La Casa de El Gato - Quesadillas", img: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Dulces_t%C3%ADpicos_de_Gualaceo.jpg" },
+          { name: "Los Agachaditos de Bolívar - Pristiños", img: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Pristi%C3%B1os_acompa%C3%B1ados_con_higos_con_queso_%28gastronom%C3%ADa_Ecuatoriana%29.jpg" }
+        ]
+      }
     };
 
-    // Imágenes rotativas para que no se vea monótono
-    const images = {
-      'Típica': [
-        "https://images.pexels.com/photos/2059151/pexels-photo-2059151.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/7613568/pexels-photo-7613568.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/6941010/pexels-photo-6941010.jpeg?auto=compress&cs=tinysrgb&w=600"
-      ],
-      'Callejera': [
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Tripa_Mishqui.jpg/800px-Tripa_Mishqui.jpg",
-        "https://images.pexels.com/photos/6646069/pexels-photo-6646069.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/4955253/pexels-photo-4955253.jpeg?auto=compress&cs=tinysrgb&w=600"
-      ],
-      'Mariscos': [
-        "https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/8697540/pexels-photo-8697540.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/1683545/pexels-photo-1683545.jpeg?auto=compress&cs=tinysrgb&w=600"
-      ],
-      'Postres': [
-        "https://images.pexels.com/photos/5060281/pexels-photo-5060281.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=600",
-        "https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&cs=tinysrgb&w=600"
-      ]
-    };
-
+    // 4. GENERAR OBJETOS MONGODB
     const generatedHuecas = [];
 
-    // 3. EL ALGORITMO GENERADOR (Triple Bucle)
-    for (const sector of sectors) {
-      for (const cuisine of cuisines) {
-        // Generar 5 restaurantes para esta combinación Sector + Cocina
-        for (let i = 0; i < 5; i++) {
+    // Recorremos Sector por Sector
+    for (const [sectorName, categories] of Object.entries(database)) {
+      // Recorremos Categoría por Categoría
+      for (const [cuisineName, restaurants] of Object.entries(categories)) {
+        // Recorremos los 5 restaurantes
+        restaurants.forEach((item, index) => {
           
-          // Seleccionar elementos aleatorios
-          const prefix = dataDict.prefixes[Math.floor(Math.random() * dataDict.prefixes.length)];
-          const name = dataDict.names[Math.floor(Math.random() * dataDict.names.length)];
-          const dish = dataDict[cuisine][i % 5]; // Usar platos variados cíclicamente
-          const imgUrl = images[cuisine][Math.floor(Math.random() * images[cuisine].length)];
-
-          // Generar coordenadas con variación (jitter) para que no se solapen en un mapa
-          const latJitter = (Math.random() * 0.02) - 0.01; // +/- 1km aprox
-          const lngJitter = (Math.random() * 0.02) - 0.01;
+          // Generar coordenadas con variación ligera (Jitter) para mapas
+          const latJitter = (index * 0.002) - 0.005;
+          const lngJitter = (index * 0.002) - 0.005;
 
           const hueca = {
-            name: `${prefix} ${name} - ${dish}`,
-            description: `Disfruta del mejor ${dish} en el sector ${sector}. Sabor auténtico quiteño garantizado.`,
-            address: `Calle Principal N${Math.floor(Math.random()*100)} y Transversal, ${sector}`,
-            cuisine: cuisine,
-            image: imgUrl,
+            name: item.name,
+            description: `Deliciosa comida ${cuisineName.toLowerCase()} en el sector ${sectorName}. ${item.name.split('-')[1]} de la mejor calidad.`,
+            address: `Calle Principal N${10 + index} y Transversal, ${sectorName}`,
+            cuisine: cuisineName,
+            image: item.img,
             location: {
-              sector: sector,
+              sector: sectorName,
               coordinates: {
-                lat: baseCoords[sector].lat + latJitter,
-                lng: baseCoords[sector].lng + lngJitter
+                lat: baseCoords[sectorName].lat + latJitter,
+                lng: baseCoords[sectorName].lng + lngJitter
               }
             },
-            // Rating aleatorio entre 3.5 y 5.0
-            rating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
-            totalRatings: Math.floor(Math.random() * 150) + 10,
+            // Rating fijo para pruebas (variado pero consistente)
+            rating: 3.5 + (index * 0.3), 
+            totalRatings: 15 + (index * 10),
             createdAt: new Date()
           };
 
           generatedHuecas.push(hueca);
-        }
+        });
       }
     }
 
-    // 4. Insertar en MongoDB
+    // 5. INSERTAR EN MONGO
     const created = await Restaurant.insertMany(generatedHuecas);
-    
-    console.log(`🌱 Seed completado: ${created.length} huecas creadas.`);
+
     res.json({ 
-      message: '¡Base de datos poblada exitosamente!', 
-      total: created.length,
-      detail: '80 restaurantes distribuidos equitativamente por sector y categoría.'
+      message: '¡80 Huecas curadas creadas con éxito!', 
+      total: created.length 
     });
 
   } catch (error) {
