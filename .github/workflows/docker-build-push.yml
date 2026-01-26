@@ -1,0 +1,46 @@
+name: Backend CI - Build & Push Docker Images
+
+on:
+  push:
+    branches: ["dev", "main"] # Se ejecuta cuando alguien hace push a estas ramas
+  pull_request:
+    branches: ["dev", "main"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Definimos una matriz para ejecutar el trabajo 4 veces (una por servicio)
+        service: [auth-service, chat-service, core-service, gateway]
+        include:
+          - service: auth-service
+            image_name: huequitas-auth
+          - service: chat-service
+            image_name: huequitas-chat
+          - service: core-service
+            image_name: huequitas-core
+          - service: gateway
+            image_name: huequitas-gateway
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        # Solo hace push si es un push a la rama (no en PRs, para ahorrar tiempo/espacio)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }} # Entra a la carpeta del microservicio
+          file: ./${{ matrix.service }}/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:latest,${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:${{ github.sha }}
