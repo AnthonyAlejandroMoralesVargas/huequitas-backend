@@ -2,7 +2,7 @@ name: Backend CI - Build & Push Docker Images
 
 on:
   push:
-    branches: ["dev", "main"] # Se ejecuta cuando alguien hace push a estas ramas
+    branches: ["dev", "main"]
   pull_request:
     branches: ["dev", "main"]
 
@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Definimos una matriz para ejecutar el trabajo 4 veces (una por servicio)
         service: [auth-service, chat-service, core-service, gateway]
         include:
           - service: auth-service
@@ -37,47 +36,40 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
-        # Solo hace push si es un push a la rama (no en PRs, para ahorrar tiempo/espacio)
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ matrix.service }} # Entra a la carpeta del microservicio
+          context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:latest,${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:${{ github.sha }}
 
+  # --- AQUI ESTABA EL ERROR DE INDENTACION ---
   deploy:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  if: github.ref == 'refs/heads/dev' # Solo despliega si es la rama dev (o main)
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' # Corregido para aceptar dev o main
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Copy docker-compose.prod.yml to server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "docker-compose.prod.yml"
-        target: "/home/ubuntu"
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/home/ubuntu"
 
-    - name: Deploy to AWS EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          # Renombrar el archivo para usarlo por defecto o especificarlo con -f
-          mv /home/ubuntu/docker-compose.prod.yml /home/ubuntu/docker-compose.yml
-
-          # Bajar las ultimas imagenes
-          docker compose pull
-
-          # Reiniciar los servicios
-          docker compose up -d --remove-orphans
-
-          # Limpiar imagenes viejas para no llenar el disco
-          docker image prune -f
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mv /home/ubuntu/docker-compose.prod.yml /home/ubuntu/docker-compose.yml
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
