@@ -11,8 +11,7 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:3001
       - CORE_SERVICE_URL=http://core-service:3002
       - CHAT_SERVICE_URL=http://chat-service:3003
-      # Agrega aquí la URL de tu frontend en Vercel cuando la tengas
-      - CLIENT_URL=*
+      - CLIENT_URL=${CLIENT_URL} # <--- VARIABLE
     networks:
       - huequitas_network
     depends_on:
@@ -26,8 +25,8 @@ services:
     restart: always
     environment:
       - PORT=3001
-      - MONGODB_URI=mongodb+srv://admin_huequitas:Ecuador2026@huequitas-mongo.fzhgeax.mongodb.net/huequitas_auth_db?retryWrites=true&w=majority&appName=huequitas-mongo
-      - JWT_SECRET=prod-secret-key-change-it
+      - MONGODB_URI=${MONGO_URI} # <--- VARIABLE
+      - JWT_SECRET=${JWT_SECRET} # <--- VARIABLE
     networks:
       - huequitas_network
 
@@ -37,8 +36,8 @@ services:
     restart: always
     environment:
       - PORT=3002
-      - MONGODB_URI=mongodb+srv://admin_huequitas:Ecuador2026@huequitas-mongo.fzhgeax.mongodb.net/huequitas_core_db?retryWrites=true&w=majority&appName=huequitas-mongo
-      - JWT_SECRET=prod-secret-key-change-it
+      - MONGODB_URI=${MONGO_URI} # <--- VARIABLE
+      - JWT_SECRET=${JWT_SECRET} # <--- VARIABLE
     networks:
       - huequitas_network
 
@@ -48,8 +47,8 @@ services:
     restart: always
     environment:
       - PORT=3003
-      - MONGODB_URI=mongodb+srv://admin_huequitas:Ecuador2026@huequitas-mongo.fzhgeax.mongodb.net/huequitas_chat_db?retryWrites=true&w=majority&appName=huequitas-mongo
-      - JWT_SECRET=prod-secret-key-change-it
+      - MONGODB_URI=${MONGO_URI} # <--- VARIABLE
+      - JWT_SECRET=${JWT_SECRET} # <--- VARIABLE
     networks:
       - huequitas_network
 

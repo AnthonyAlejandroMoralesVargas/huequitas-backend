@@ -47,7 +47,7 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' # Corregido para aceptar dev o main
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
@@ -68,8 +68,16 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          # AQUÍ ESTÁ LA MAGIA: Creamos el archivo .env en el servidor
           script: |
             mv /home/ubuntu/docker-compose.prod.yml /home/ubuntu/docker-compose.yml
+
+            # Crear archivo .env con los secretos de GitHub
+            echo "MONGO_URI=${{ secrets.MONGO_URI }}" > /home/ubuntu/.env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> /home/ubuntu/.env
+            echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> /home/ubuntu/.env
+
+            # Bajar imagenes y levantar
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
