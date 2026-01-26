@@ -44,3 +44,40 @@ jobs:
           file: ./${{ matrix.service }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:latest,${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:${{ github.sha }}
+
+  deploy:
+  needs: build-and-push
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/dev' # Solo despliega si es la rama dev (o main)
+
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Copy docker-compose.prod.yml to server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "docker-compose.prod.yml"
+        target: "/home/ubuntu"
+
+    - name: Deploy to AWS EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # Renombrar el archivo para usarlo por defecto o especificarlo con -f
+          mv /home/ubuntu/docker-compose.prod.yml /home/ubuntu/docker-compose.yml
+
+          # Bajar las ultimas imagenes
+          docker compose pull
+
+          # Reiniciar los servicios
+          docker compose up -d --remove-orphans
+
+          # Limpiar imagenes viejas para no llenar el disco
+          docker image prune -f

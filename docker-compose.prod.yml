@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  gateway:
+    image: estefano2344/huequitas-gateway:latest
+    container_name: huequitas_gateway
+    ports:
+      - "8000:8000"
+    restart: always
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - CORE_SERVICE_URL=http://core-service:3002
+      - CHAT_SERVICE_URL=http://chat-service:3003
+      # Agrega aquí la URL de tu frontend en Vercel cuando la tengas
+      - CLIENT_URL=*
+    networks:
+      - huequitas_network
+    depends_on:
+      - auth-service
+      - core-service
+      - chat-service
+
+  auth-service:
+    image: estefano2344/huequitas-auth:latest
+    container_name: huequitas_auth
+    restart: always
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb+srv://admin_huequitas:Ecuador2026@huequitas-mongo.fzhgeax.mongodb.net/huequitas_auth_db?retryWrites=true&w=majority&appName=huequitas-mongo
+      - JWT_SECRET=prod-secret-key-change-it
+    networks:
+      - huequitas_network
+
+  core-service:
+    image: estefano2344/huequitas-core:latest
+    container_name: huequitas_core
+    restart: always
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb+srv://admin_huequitas:Ecuador2026@huequitas-mongo.fzhgeax.mongodb.net/huequitas_core_db?retryWrites=true&w=majority&appName=huequitas-mongo
+      - JWT_SECRET=prod-secret-key-change-it
+    networks:
+      - huequitas_network
+
+  chat-service:
+    image: estefano2344/huequitas-chat:latest
+    container_name: huequitas_chat
+    restart: always
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb+srv://admin_huequitas:Ecuador2026@huequitas-mongo.fzhgeax.mongodb.net/huequitas_chat_db?retryWrites=true&w=majority&appName=huequitas-mongo
+      - JWT_SECRET=prod-secret-key-change-it
+    networks:
+      - huequitas_network
+
+networks:
+  huequitas_network:
+    driver: bridge
