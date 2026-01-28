@@ -38,6 +38,8 @@ services:
       - PORT=3001
       - MONGODB_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
     networks:
       - huequitas_network
 

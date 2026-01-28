@@ -75,6 +75,8 @@ jobs:
             echo "MONGO_URI=${{ secrets.MONGO_URI }}" > /home/ubuntu/.env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> /home/ubuntu/.env
             echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> /home/ubuntu/.env
+            echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> /home/ubuntu/.env
+            echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}" >> /home/ubuntu/.env
 
             # Bajar imágenes (incluyendo la del frontend si ya se subió) y levantar
             docker compose pull
