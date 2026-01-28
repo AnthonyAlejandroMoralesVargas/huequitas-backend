@@ -39,7 +39,7 @@ services:
       - MONGODB_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
       - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
     networks:
       - huequitas_network
 
