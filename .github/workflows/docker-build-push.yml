@@ -43,7 +43,6 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:latest,${{ secrets.DOCKER_USERNAME }}/${{ matrix.image_name }}:${{ github.sha }}
 
-  # --- AQUI ESTABA EL ERROR DE INDENTACION ---
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -68,16 +67,16 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # AQUÍ ESTÁ LA MAGIA: Creamos el archivo .env en el servidor
           script: |
             mv /home/ubuntu/docker-compose.prod.yml /home/ubuntu/docker-compose.yml
 
-            # Crear archivo .env con los secretos de GitHub
+            # Crear archivo .env
+            # CLIENT_URL debe ser http://100.53.153.178 (configurado en GitHub Secrets)
             echo "MONGO_URI=${{ secrets.MONGO_URI }}" > /home/ubuntu/.env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> /home/ubuntu/.env
             echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> /home/ubuntu/.env
 
-            # Bajar imagenes y levantar
+            # Bajar imágenes (incluyendo la del frontend si ya se subió) y levantar
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f

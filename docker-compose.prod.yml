@@ -1,6 +1,16 @@
 version: "3.8"
 
 services:
+  # --- NUEVO SERVICIO ---
+  frontend:
+    image: estefano2344/huequitas-frontend:latest
+    container_name: huequitas_frontend
+    ports:
+      - "80:80" # Puerto Web por defecto
+    restart: always
+    networks:
+      - huequitas_network
+
   gateway:
     image: estefano2344/huequitas-gateway:latest
     container_name: huequitas_gateway
@@ -11,7 +21,8 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:3001
       - CORE_SERVICE_URL=http://core-service:3002
       - CHAT_SERVICE_URL=http://chat-service:3003
-      - CLIENT_URL=${CLIENT_URL} # <--- VARIABLE
+      # IMPORTANTE: Ahora el cliente es la propia IP de AWS (Puerto 80)
+      - CLIENT_URL=${CLIENT_URL}
     networks:
       - huequitas_network
     depends_on:
@@ -25,8 +36,8 @@ services:
     restart: always
     environment:
       - PORT=3001
-      - MONGODB_URI=${MONGO_URI} # <--- VARIABLE
-      - JWT_SECRET=${JWT_SECRET} # <--- VARIABLE
+      - MONGODB_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - huequitas_network
 
@@ -36,8 +47,8 @@ services:
     restart: always
     environment:
       - PORT=3002
-      - MONGODB_URI=${MONGO_URI} # <--- VARIABLE
-      - JWT_SECRET=${JWT_SECRET} # <--- VARIABLE
+      - MONGODB_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - huequitas_network
 
@@ -47,8 +58,10 @@ services:
     restart: always
     environment:
       - PORT=3003
-      - MONGODB_URI=${MONGO_URI} # <--- VARIABLE
-      - JWT_SECRET=${JWT_SECRET} # <--- VARIABLE
+      - MONGODB_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      # IMPORTANTE PARA CORS
+      - CLIENT_URL=${CLIENT_URL}
     networks:
       - huequitas_network
 
