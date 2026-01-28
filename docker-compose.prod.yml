@@ -56,6 +56,8 @@ services:
     image: estefano2344/huequitas-chat:latest
     container_name: huequitas_chat
     restart: always
+    ports:
+      - "3003:3003"
     environment:
       - PORT=3003
       - MONGODB_URI=${MONGO_URI}
